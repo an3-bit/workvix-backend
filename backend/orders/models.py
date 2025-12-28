@@ -8,8 +8,7 @@ User = get_user_model()
 class Order(BaseModel):
     """Order model for accepted offers"""
     
-    PAID = 'paid'
-    IN_PROGRESS = 'in_progress'
+    ACTIVE = 'active'
     SUBMITTED = 'submitted'
     REVISION_REQUESTED = 'revision_requested'
     COMPLETED = 'completed'
@@ -17,8 +16,7 @@ class Order(BaseModel):
     DISPUTED = 'disputed'
     
     STATUS_CHOICES = [
-        (PAID, 'Paid'),
-        (IN_PROGRESS, 'In Progress'),
+        (ACTIVE, 'Active'),
         (SUBMITTED, 'Submitted'),
         (REVISION_REQUESTED, 'Revision Requested'),
         (COMPLETED, 'Completed'),
@@ -31,7 +29,7 @@ class Order(BaseModel):
     freelancer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='freelancer_orders')
     offer = models.OneToOneField('offers.Offer', on_delete=models.CASCADE, related_name='order')
     
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=PAID)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=ACTIVE)
     
     # Order details
     title = models.CharField(max_length=200)
@@ -40,7 +38,8 @@ class Order(BaseModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Dates
-    due_date = models.DateTimeField()
+    delivery_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     
@@ -49,8 +48,11 @@ class Order(BaseModel):
     max_revisions = models.PositiveIntegerField(default=3)
     
     # Instructions and feedback
-    client_instructions = models.TextField(blank=True)
-    completion_notes = models.TextField(blank=True)
+    special_instructions = models.TextField(blank=True, default='')
+    client_instructions = models.TextField(blank=True, default='')
+    completion_notes = models.TextField(blank=True, default='')
+    client_feedback = models.TextField(blank=True, default='')
+    client_rating = models.PositiveIntegerField(null=True, blank=True)
     
     class Meta:
         db_table = 'orders'
@@ -67,6 +69,25 @@ class Order(BaseModel):
     @property
     def can_request_revision(self):
         return self.revision_count < self.max_revisions
+
+
+class OrderSubmission(BaseModel):
+    """Work submission by freelancer"""
+    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='submissions')
+    freelancer = models.ForeignKey(User, on_delete=models.CASCADE)
+    submission_text = models.TextField()
+    attachment = models.FileField(upload_to='order_submissions/', null=True, blank=True)
+    notes = models.TextField(blank=True)
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'order_submissions'
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Submission for {self.order.title}"
 
 
 class OrderDeliverable(BaseModel):

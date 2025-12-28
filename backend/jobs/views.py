@@ -9,7 +9,8 @@ from .serializers import (
     JobSerializer, 
     JobCreateSerializer, 
     JobListSerializer,
-    GuestJobSubmissionSerializer
+    GuestJobSubmissionSerializer,
+    JobUpdateSerializer
 )
 
 User = get_user_model()
@@ -86,6 +87,17 @@ class JobCreateView(generics.CreateAPIView):
             raise drf_serializers.ValidationError("Only clients can post jobs.")
         
         serializer.save(client=self.request.user, status=Job.OPEN)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        # Use JobSerializer for response to include all fields properly
+        job = serializer.instance
+        response_serializer = JobSerializer(job)
+        headers = self.get_success_headers(response_serializer.data)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class MyJobsView(generics.ListAPIView):
@@ -96,6 +108,20 @@ class MyJobsView(generics.ListAPIView):
     
     def get_queryset(self):
         return Job.objects.filter(client=self.request.user).order_by('-created_at')
+
+
+class JobUpdateView(generics.UpdateAPIView):
+    """Update job details (client owner only)"""
+    serializer_class = JobUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Job.objects.all()
+
+    def perform_update(self, serializer):
+        job = self.get_object()
+        if self.request.user != job.client:
+            from rest_framework import serializers as drf_serializers
+            raise drf_serializers.ValidationError("Only the job owner can update this job.")
+        serializer.save()
 
 
 @api_view(['POST'])

@@ -4,10 +4,10 @@ from . import views
 app_name = 'offers'
 
 urlpatterns = [
-    # Offers URLs will be implemented in the next phase
     path('', views.OfferListView.as_view(), name='list'),
     path('<uuid:pk>/', views.OfferDetailView.as_view(), name='detail'),
     path('create/', views.CreateOfferView.as_view(), name='create'),
-    path('<uuid:pk>/accept/', views.AcceptOfferView.as_view(), name='accept'),
-    path('<uuid:pk>/reject/', views.RejectOfferView.as_view(), name='reject'),
+    path('<uuid:offer_id>/accept/', views.accept_offer, name='accept'),
+    path('<uuid:offer_id>/reject/', views.reject_offer, name='reject'),
+    path('job/<uuid:job_id>/', views.job_offers, name='job-offers'),
 ]

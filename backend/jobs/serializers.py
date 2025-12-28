@@ -16,7 +16,7 @@ class JobAttachmentSerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     """Serializer for job listing and details"""
     
-    attachments = JobAttachmentSerializer(many=True, read_only=True)
+    attachments = serializers.SerializerMethodField()
     client = UserProfileSerializer(read_only=True)
     is_expired = serializers.ReadOnlyField()
     
@@ -25,6 +25,11 @@ class JobSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('id', 'client', 'created_at', 'updated_at', 
                           'views_count', 'offers_count', 'is_expired')
+    
+    def get_attachments(self, obj):
+        """Get job attachments"""
+        attachments = obj.attachments.all()
+        return JobAttachmentSerializer(attachments, many=True).data
     
     def validate_deadline(self, value):
         if value <= timezone.now():
@@ -40,33 +45,30 @@ class JobSerializer(serializers.ModelSerializer):
 class JobCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating jobs"""
     
-    attachments = serializers.ListField(
-        child=serializers.FileField(),
-        required=False,
-        allow_empty=True
-    )
-    
     class Meta:
         model = Job
-        fields = ['title', 'description', 'assignment_type', 'subject', 
-                 'deadline', 'pages', 'urgency', 'budget_min', 'budget_max', 
-                 'instructions', 'skills_required', 'attachments']
+        fields = ['title', 'description', 'assignment_type', 'deadline', 
+                 'budget_min', 'budget_max']
     
     def create(self, validated_data):
-        attachments_data = validated_data.pop('attachments', [])
         job = Job.objects.create(**validated_data)
-        
-        # Handle file attachments
-        for attachment_file in attachments_data:
-            JobAttachment.objects.create(
-                job=job,
-                file=attachment_file,
-                original_name=attachment_file.name,
-                file_size=attachment_file.size,
-                content_type=getattr(attachment_file, 'content_type', 'application/octet-stream')
-            )
-        
         return job
+
+
+class JobUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating jobs (partial updates allowed)"""
+
+    class Meta:
+        model = Job
+        fields = ['title', 'description', 'assignment_type', 'deadline',
+                  'budget_min', 'budget_max']
+
+    def update(self, instance, validated_data):
+        for field in self.Meta.fields:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+        instance.save()
+        return instance
 
 
 class JobListSerializer(serializers.ModelSerializer):

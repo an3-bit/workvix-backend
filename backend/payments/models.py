@@ -21,6 +21,8 @@ class Payment(BaseModel):
     PENDING = 'pending'
     INITIATED = 'initiated'
     PROCESSING = 'processing'
+    ESCROW = 'escrow'
+    COMPLETED = 'completed'
     PAID = 'paid'
     FAILED = 'failed'
     REFUNDED = 'refunded'
@@ -30,6 +32,8 @@ class Payment(BaseModel):
         (PENDING, 'Pending'),
         (INITIATED, 'Initiated'),
         (PROCESSING, 'Processing'),
+        (ESCROW, 'Escrow'),
+        (COMPLETED, 'Completed'),
         (PAID, 'Paid'),
         (FAILED, 'Failed'),
         (REFUNDED, 'Refunded'),
@@ -47,8 +51,8 @@ class Payment(BaseModel):
     ]
     
     order = models.ForeignKey('orders.Order', on_delete=models.CASCADE, related_name='payments')
-    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_made')
-    freelancer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_received')
+    payer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_made')
+    payee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_received')
     
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -59,6 +63,7 @@ class Payment(BaseModel):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=PENDING)
     
     # Provider-specific fields
+    transaction_id = models.CharField(max_length=255, blank=True, unique=True)
     provider_transaction_id = models.CharField(max_length=255, blank=True)
     provider_payment_intent_id = models.CharField(max_length=255, blank=True)
     provider_response = models.JSONField(default=dict)
@@ -68,6 +73,7 @@ class Payment(BaseModel):
     description = models.TextField(blank=True)
     
     # Dates
+    payment_date = models.DateTimeField(null=True, blank=True)
     initiated_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     failed_at = models.DateTimeField(null=True, blank=True)
@@ -80,27 +86,83 @@ class Payment(BaseModel):
         return f"Payment #{self.id}: ${self.amount} - {self.status}"
 
 
+class PaymentMethod(BaseModel):
+    """Payment method model for storing user payment methods"""
+    
+    CREDIT_CARD = 'credit_card'
+    DEBIT_CARD = 'debit_card'
+    PAYPAL = 'paypal'
+    BANK_ACCOUNT = 'bank_account'
+    
+    METHOD_CHOICES = [
+        (CREDIT_CARD, 'Credit Card'),
+        (DEBIT_CARD, 'Debit Card'),
+        (PAYPAL, 'PayPal'),
+        (BANK_ACCOUNT, 'Bank Account'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_methods')
+    method_type = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    
+    # Card details (encrypted/tokenized in production)
+    masked_card_number = models.CharField(max_length=20, blank=True)
+    card_number = models.CharField(max_length=20, blank=True)  # Should be encrypted
+    cardholder_name = models.CharField(max_length=100, blank=True)
+    expiry_month = models.PositiveIntegerField(null=True, blank=True)
+    expiry_year = models.PositiveIntegerField(null=True, blank=True)
+    cvv = models.CharField(max_length=4, blank=True)  # Should be encrypted
+    
+    # Billing details
+    billing_address = models.TextField(blank=True)
+    
+    # Provider details
+    provider_method_id = models.CharField(max_length=255, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'payment_methods'
+        
+    def __str__(self):
+        return f"{self.user.name} - {self.method_type} - {self.masked_card_number}"
+
+
 class Transaction(BaseModel):
     """Transaction model for payment history"""
     
-    DEBIT = 'debit'
-    CREDIT = 'credit'
+    PAYMENT = 'payment'
+    RELEASE = 'release'
+    REFUND = 'refund'
+    FEE = 'fee'
     
     TYPE_CHOICES = [
-        (DEBIT, 'Debit'),
-        (CREDIT, 'Credit'),
+        (PAYMENT, 'Payment'),
+        (RELEASE, 'Release'),
+        (REFUND, 'Refund'),
+        (FEE, 'Fee'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    PENDING = 'pending'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+    
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (COMPLETED, 'Completed'),
+        (FAILED, 'Failed'),
+    ]
+    
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='transactions')
-    
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
-    description = models.TextField()
+    transaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     
-    # Balance tracking
-    balance_before = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    balance_after = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    transaction_id = models.CharField(max_length=255, unique=True, blank=True)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    description = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
     
     class Meta:
         db_table = 'transactions'
