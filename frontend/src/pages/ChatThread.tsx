@@ -43,8 +43,20 @@ const ChatThread: React.FC = () => {
         if (res.data?.job || res.data?.job_id) {
           const jobId = res.data?.job || res.data?.job_id;
           try {
-            const offersRes = await offerAPI.jobOffers(jobId);
-            setOffers(offersRes.data?.offers || []);
+            if (user?.role === 'client') {
+              // Clients can view all offers for their job
+              const offersRes = await offerAPI.jobOffers(jobId);
+              setOffers(offersRes.data?.offers || []);
+            } else if (user?.role === 'freelancer') {
+              // Freelancers can only see their own offers
+              const offersRes = await offerAPI.listOffers();
+              const allOffers = offersRes.data?.results || offersRes.data || [];
+              // Filter for this specific job
+              const jobSpecificOffers = allOffers.filter((offer: any) => 
+                offer.job?.id === jobId || offer.job === jobId
+              );
+              setOffers(jobSpecificOffers);
+            }
           } catch (offerErr) {
             // Silently fail if offers can't be loaded
             console.error('Failed to load offers:', offerErr);
@@ -112,8 +124,8 @@ const ChatThread: React.FC = () => {
   const handleRejectOffer = async (offerId: string) => {
     try {
       await offerAPI.rejectOffer(offerId);
-      // Reload offers
-      if (jobId) {
+      // Reload offers (clients only)
+      if (jobId && user?.role === 'client') {
         const offersRes = await offerAPI.jobOffers(jobId);
         setOffers(offersRes.data?.offers || []);
       }
@@ -129,8 +141,8 @@ const ChatThread: React.FC = () => {
       return;
     }
     if (user?.role !== 'freelancer') {
-        setError('Only freelancers can create offers.');
-        return;
+      setError('Only freelancers can create offers.');
+      return;
     }
     const amount = Number(offerData.amount);
     const days = Number(offerData.delivery_time);
@@ -155,22 +167,17 @@ const ChatThread: React.FC = () => {
       setShowOffer(false);
       // Show success message
       setOfferCreatedSuccess(true);
-      // Reload offers
-      if (jobId) {
-        const offersRes = await offerAPI.jobOffers(jobId);
-        setOffers(offersRes.data?.offers || []);
-      }
-      // Clear error and redirect after 3 seconds
+      // Clear error and redirect after 2 seconds
       setError('');
       setTimeout(() => {
-        navigate('/freelancer-dashboard');
-      }, 3000);
+        navigate('/my-offers'); // Redirect to freelancer's offers page
+      }, 2000);
     } catch (err: any) {
+      // 403 Forbidden is returned if freelancer already made an offer for this job, or job is closed, or not allowed
       const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to create offer';
-       // Log backend response to console for debugging
-       // eslint-disable-next-line no-console
-       console.error('Offer creation failed', err.response?.data || err);
-       setError(msg);
+      // eslint-disable-next-line no-console
+      console.error('Offer creation failed', err.response?.data || err);
+      setError(msg);
     }
   };
 
@@ -201,14 +208,24 @@ const ChatThread: React.FC = () => {
                     </Link>
                   )}
                 </div>
-                {user?.role === 'freelancer' && !offers.some((o: any) => o.freelancer?.id === (user as any)?.id) && (
-                  <button
-                    onClick={() => setShowOffer(true)}
-                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md"
-                  >
-                    <FilePlus size={18} /> Create Offer
-                  </button>
-                )}
+                <div className="flex gap-2">
+                  {user?.role === 'freelancer' && offers.some((o: any) => o.freelancer?.id === (user as any)?.id && o.status === 'accepted') && (
+                    <Link
+                      to={`/submit-work/${offers.find((o: any) => o.freelancer?.id === (user as any)?.id && o.status === 'accepted')?.id}`}
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md"
+                    >
+                      <Send size={18} /> Submit Work
+                    </Link>
+                  )}
+                  {user?.role === 'freelancer' && !offers.some((o: any) => o.freelancer?.id === (user as any)?.id) && (
+                    <button
+                      onClick={() => setShowOffer(true)}
+                      className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md"
+                    >
+                      <FilePlus size={18} /> Create Offer
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3 max-h-[50vh] overflow-y-auto border rounded-md p-3">
@@ -387,7 +404,7 @@ const ChatThread: React.FC = () => {
                 Your offer has been sent to the client. You will be notified when they respond.
               </p>
               <p className="text-sm text-gray-500">
-                Redirecting to your dashboard in a few seconds...
+                Redirecting to your offers page...
               </p>
             </div>
           </div>

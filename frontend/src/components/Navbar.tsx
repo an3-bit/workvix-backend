@@ -73,8 +73,8 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to={isAuthenticated ? dashboardLink : "/"} className="text-2xl font-bold text-blue-600">
-            FreelanceHub
+          <Link to={isAuthenticated ? dashboardLink : "/"} className="text-2xl font-bold select-none">
+            <span className="text-green-600">Work</span><span className="text-orange-500">Vix</span>
           </Link>
 
           {/* Desktop Menu */}
@@ -122,8 +122,9 @@ const Navbar: React.FC = () => {
                   <Link
                     to="/chats"
                     className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-1"
+                    aria-label="Chats"
                   >
-                    <MessageCircle size={18} /> Chats
+                    <MessageCircle size={18} />
                   </Link>
                   <Badge count={unreadChats} />
                 </div>
@@ -131,8 +132,9 @@ const Navbar: React.FC = () => {
                   <Link
                     to="/notifications"
                     className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-1"
+                    aria-label="Notifications"
                   >
-                    <Bell size={18} /> Notifications
+                    <Bell size={18} />
                   </Link>
                   <Badge count={unreadNotifications} />
                 </div>
@@ -228,8 +230,9 @@ const Navbar: React.FC = () => {
                     to="/chats"
                     className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-2"
                     onClick={() => setIsOpen(false)}
+                    aria-label="Chats"
                   >
-                    <MessageCircle size={18} /> Chats
+                    <MessageCircle size={18} />
                     {unreadChats > 0 && (
                       <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {unreadChats > 99 ? '99+' : unreadChats}
@@ -242,8 +245,9 @@ const Navbar: React.FC = () => {
                     to="/notifications"
                     className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-2"
                     onClick={() => setIsOpen(false)}
+                    aria-label="Notifications"
                   >
-                    <Bell size={18} /> Notifications
+                    <Bell size={18} />
                     {unreadNotifications > 0 && (
                       <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {unreadNotifications > 99 ? '99+' : unreadNotifications}
