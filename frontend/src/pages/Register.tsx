@@ -44,7 +44,22 @@ const Register: React.FC = () => {
       };
       console.log('Register payload:', registerData);
       await register(registerData);
-      navigate('/');
+      
+      // Get user data from localStorage (it's set by the register function)
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        // Redirect based on user role
+        if (userData.role === 'client') {
+          navigate('/client-dashboard');
+        } else if (userData.role === 'freelancer') {
+          navigate('/freelancer-dashboard');
+        } else {
+          navigate('/');
+        }
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       console.error('Register error:', err.response?.data);
       // Handle field-specific errors

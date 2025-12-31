@@ -27,9 +27,23 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      await login(formData.email, formData.password);
-      // Redirect will be handled by the auth context
-      navigate('/');
+      const response = await login(formData.email, formData.password);
+      
+      // Get user data from localStorage (it's set by the login function)
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        // Redirect based on user role
+        if (userData.role === 'client') {
+          navigate('/client-dashboard');
+        } else if (userData.role === 'freelancer') {
+          navigate('/freelancer-dashboard');
+        } else {
+          navigate('/');
+        }
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     }

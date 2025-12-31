@@ -1,20 +1,30 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Chat, Message
+from .models import Chat, Message, MessageAttachment
 from users.serializers import UserProfileSerializer
 
 User = get_user_model()
+
+
+class MessageAttachmentSerializer(serializers.ModelSerializer):
+    """Serializer for message attachments"""
+    
+    class Meta:
+        model = MessageAttachment
+        fields = ('id', 'file', 'original_name', 'file_size', 'content_type', 'created_at')
+        read_only_fields = ('id', 'created_at')
 
 
 class MessageSerializer(serializers.ModelSerializer):
     """Serializer for chat messages"""
     
     sender = UserProfileSerializer(read_only=True)
+    attachments = MessageAttachmentSerializer(many=True, read_only=True)
     
     class Meta:
         model = Message
         fields = '__all__'
-        read_only_fields = ('id', 'chat', 'sender', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'chat', 'sender', 'created_at', 'updated_at', 'attachments')
     
     def create(self, validated_data):
         validated_data['sender'] = self.context['request'].user
@@ -66,11 +76,13 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 class CreateMessageSerializer(serializers.ModelSerializer):
     """Serializer for creating new messages"""
     
+    attachment = serializers.FileField(required=False, allow_null=True)
+    
     class Meta:
         model = Message
-        fields = ('content',)
+        fields = ('content', 'attachment')
     
     def validate(self, attrs):
-        if not attrs.get('content'):
-            raise serializers.ValidationError("Message must have content.")
+        if not attrs.get('content') and not attrs.get('attachment'):
+            raise serializers.ValidationError("Message must have content or an attachment.")
         return attrs

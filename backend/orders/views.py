@@ -161,6 +161,11 @@ def approve_order(request, order_id):
         order.client_rating = serializer.validated_data['rating']
         order.save()
         
+        # Mark the associated job as completed
+        if order.job:
+            order.job.status = 'completed'
+            order.job.save()
+        
         return Response(
             OrderSerializer(order).data,
             status=status.HTTP_200_OK

@@ -102,7 +102,9 @@ class CreateOfferView(generics.CreateAPIView):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def accept_offer(request, offer_id):
-    """Accept an offer (client only)"""
+    """Accept an offer (client only) and create an order"""
+    from django.utils import timezone
+    from orders.models import Order
     
     try:
         offer = Offer.objects.get(id=offer_id)
@@ -141,9 +143,28 @@ def accept_offer(request, offer_id):
         status=Offer.PENDING
     ).exclude(id=offer.id).update(status=Offer.REJECTED)
     
+    # Auto-create order from accepted offer
+    delivery_date = timezone.now() + timezone.timedelta(days=offer.delivery_time)
+    order = Order.objects.create(
+        job=offer.job,
+        client=offer.job.client,
+        freelancer=offer.freelancer,
+        offer=offer,
+        status=Order.ACTIVE,
+        title=offer.title or f"Order for {offer.job.title}",
+        description=offer.description,
+        delivery_time=offer.delivery_time,
+        amount=offer.amount,
+        delivery_date=delivery_date,
+        due_date=delivery_date,
+    )
+    
+    from orders.serializers import OrderSerializer
+    
     return Response({
-        'message': 'Offer accepted successfully',
-        'offer': OfferSerializer(offer, context={'request': request}).data
+        'message': 'Offer accepted successfully and order created',
+        'offer': OfferSerializer(offer, context={'request': request}).data,
+        'order': OrderSerializer(order, context={'request': request}).data
     }, status=status.HTTP_200_OK)
 
 

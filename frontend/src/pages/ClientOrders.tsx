@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { orderAPI } from '../api/endpoints';
-import { CheckCircle2, Clock, AlertCircle, MessageCircle, CreditCard } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, MessageCircle, CreditCard, X, FileText, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const statusBadge = (status: string) => {
@@ -27,6 +27,8 @@ const ClientOrders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'active' | 'all'>('active');
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -70,6 +72,11 @@ const ClientOrders: React.FC = () => {
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to request revision');
     }
+  };
+
+  const handleViewSubmission = (submission: any) => {
+    setSelectedSubmission(submission);
+    setShowSubmissionModal(true);
   };
 
   const filteredOrders = activeTab === 'active'
@@ -173,6 +180,14 @@ const ClientOrders: React.FC = () => {
                       <MessageCircle size={16} /> Chat
                     </button>
                   )}
+                  {order.status === 'submitted' && order.submissions && order.submissions.length > 0 && (
+                    <button
+                      onClick={() => handleViewSubmission(order.submissions[0])}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 text-sm font-medium transition"
+                    >
+                      <FileText size={16} /> View Submission
+                    </button>
+                  )}
                   {order.status === 'active' && (
                     <button
                       onClick={() => navigate(`/payment/${order.id || order._id}`)}
@@ -208,6 +223,97 @@ const ClientOrders: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Submission Modal */}
+      {showSubmissionModal && selectedSubmission && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Work Submission Details</h2>
+              <button
+                onClick={() => {
+                  setShowSubmissionModal(false);
+                  setSelectedSubmission(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Submission Text */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Work Details</h3>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedSubmission.submission_text}</p>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedSubmission.notes && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Additional Notes</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p className="text-gray-700 whitespace-pre-wrap">{selectedSubmission.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Attachment */}
+              {selectedSubmission.attachment && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Attached File</h3>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <FileText size={24} className="text-blue-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {selectedSubmission.attachment.split('/').pop()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Attached on {new Date(selectedSubmission.created_at || selectedSubmission.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={selectedSubmission.attachment}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      <Download size={16} /> Download
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Submission Date */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Submitted:</span>{' '}
+                  {new Date(selectedSubmission.created_at || selectedSubmission.createdAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="sticky bottom-0 bg-white border-t p-6 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowSubmissionModal(false);
+                  setSelectedSubmission(null);
+                }}
+                className="px-6 py-2 rounded-lg bg-gray-200 text-gray-900 hover:bg-gray-300 font-medium transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

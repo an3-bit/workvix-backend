@@ -70,23 +70,8 @@ const FreelancerDashboard: React.FC = () => {
     orderId: string,
     action: 'submit'
   ) => {
-    try {
-      const submission = window.prompt('Submit your work (text)', 'Completed work attached.');
-      if (!submission) return;
-      await orderAPI.submitWork(orderId, { submission_text: submission });
-      const ordersRes = await orderAPI.listOrders();
-      const ordersData = Array.isArray(ordersRes.data)
-        ? ordersRes.data
-        : (ordersRes.data?.results ?? []);
-      const normalizeOrder = (o: any) => ({
-        ...o,
-        _id: o._id ?? o.id,
-        createdAt: o.createdAt ?? o.created_at,
-        updatedAt: o.updatedAt ?? o.updated_at,
-      });
-      setOrders(ordersData.map(normalizeOrder));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit work');
+    if (action === 'submit') {
+      navigate(`/submit-work/${orderId}`);
     }
   };
 

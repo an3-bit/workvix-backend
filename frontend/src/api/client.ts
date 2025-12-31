@@ -15,4 +15,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Remove token and user from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Optionally, reload or redirect to login
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

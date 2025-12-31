@@ -18,6 +18,7 @@ import FreelancerJobs from './pages/FreelancerJobs';
 import CreateJob from './pages/CreateJob';
 import EditJob from './pages/EditJob';
 import SubmitBid from './pages/SubmitBid';
+import SubmitWork from './pages/SubmitWork';
 import ChatThread from './pages/ChatThread';
 import JobOffers from './pages/JobOffers';
 import Chats from './pages/Chats';
@@ -94,6 +95,14 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/submit-work/:orderId"
+            element={
+              <ProtectedRoute requiredRole="freelancer">
+                <SubmitWork />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/my-offers"
             element={
               <ProtectedRoute requiredRole="freelancer">
@@ -129,6 +138,14 @@ const App: React.FC = () => {
           />
           <Route
             path="/client-orders"
+            element={
+              <ProtectedRoute requiredRole="client">
+                <ClientOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
             element={
               <ProtectedRoute requiredRole="client">
                 <ClientOrders />

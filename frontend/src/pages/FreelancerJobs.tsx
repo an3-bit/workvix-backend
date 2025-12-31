@@ -37,6 +37,9 @@ const FreelancerJobs: React.FC = () => {
     navigate(`/submit-bid/${jobId}`);
   };
 
+  // Filter out completed and cancelled jobs
+  const availableJobs = jobs.filter(job => job.status !== 'completed' && job.status !== 'cancelled');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -56,9 +59,13 @@ const FreelancerJobs: React.FC = () => {
           <div className="text-center py-12">
             <p className="text-gray-600">No jobs available right now. Please check back later.</p>
           </div>
+        ) : availableJobs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600">All available jobs have been completed or cancelled.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map(job => (
+            {availableJobs.map(job => (
               <JobCard
                 key={job._id}
                 job={job}

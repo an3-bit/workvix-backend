@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from .models import Chat, Message
+from .models import Chat, Message, MessageAttachment
 from .serializers import (
     ChatSerializer, 
     ChatDetailSerializer, 
@@ -135,10 +135,27 @@ class SendMessageView(generics.CreateAPIView):
         
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            # Get file from validated data
+            attachment_file = serializer.validated_data.pop('attachment', None)
+            
             message = serializer.save(
                 chat=chat,
                 sender=user
             )
+            
+            # Handle file attachment if present
+            if attachment_file:
+                try:
+                    MessageAttachment.objects.create(
+                        message=message,
+                        file=attachment_file,
+                        original_name=attachment_file.name,
+                        file_size=attachment_file.size,
+                        content_type=attachment_file.content_type or 'application/octet-stream'
+                    )
+                except Exception as e:
+                    # If attachment fails, still return the message but log the error
+                    print(f"Error saving attachment: {str(e)}")
             
             # Update chat's last message time
             from django.utils import timezone

@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Job } from '../api/endpoints';
-import { Trash2, Edit2, Users } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 
 interface JobCardProps {
   job: Job;
   onEdit?: (job: Job) => void;
-  onDelete?: (jobId: string) => void;
-  onAssign?: (jobId: string) => void;
   showActions?: boolean;
   showBidButton?: boolean;
   onBid?: (jobId: string) => void;
@@ -17,8 +15,6 @@ interface JobCardProps {
 const JobCard: React.FC<JobCardProps> = ({
   job,
   onEdit,
-  onDelete,
-  onAssign,
   showActions = false,
   showBidButton = false,
   onBid,
@@ -105,28 +101,16 @@ const JobCard: React.FC<JobCardProps> = ({
           {onEdit && (
             <button
               onClick={() => onEdit(job)}
-              className="flex-1 flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition"
+              disabled={job.status !== 'open' && job.status !== 'pending_registration'}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg transition ${
+                job.status !== 'open' && job.status !== 'pending_registration'
+                  ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              title={job.status !== 'open' && job.status !== 'pending_registration' ? 'Cannot edit closed or in-progress jobs' : ''}
             >
               <Edit2 size={16} />
               <span>Edit</span>
-            </button>
-          )}
-          {onAssign && !job.assignedFreelancer && (
-            <button
-              onClick={() => onAssign(job._id)}
-              className="flex-1 flex items-center justify-center space-x-2 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition"
-            >
-              <Users size={16} />
-              <span>Assign</span>
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={() => onDelete(job._id)}
-              className="flex-1 flex items-center justify-center space-x-2 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition"
-            >
-              <Trash2 size={16} />
-              <span>Delete</span>
             </button>
           )}
         </div>
@@ -135,9 +119,14 @@ const JobCard: React.FC<JobCardProps> = ({
       {showBidButton && onBid && (
         <button
           onClick={() => onBid(job._id)}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition mt-4"
+          disabled={job.status === 'completed' || job.status === 'cancelled'}
+          className={`w-full py-2 rounded-lg transition mt-4 ${
+            job.status === 'completed' || job.status === 'cancelled'
+              ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
         >
-          Submit Bid
+          {job.status === 'completed' ? 'Job Completed' : job.status === 'cancelled' ? 'Job Cancelled' : 'Submit Bid'}
         </button>
       )}
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jobAPI } from '../api/endpoints';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 
 const CreateJob: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const CreateJob: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -28,6 +29,7 @@ const CreateJob: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess(false);
 
     try {
       const payload = {
@@ -41,7 +43,15 @@ const CreateJob: React.FC = () => {
 
       console.log('Job payload:', payload);
       await jobAPI.createJob(payload);
-      navigate('/client-dashboard');
+      
+      // Show success message
+      setSuccess(true);
+      setIsLoading(false);
+      
+      // Redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        navigate('/client-dashboard');
+      }, 3000);
     } catch (err: any) {
       console.error('Create job error:', err.response?.data);
       if (err.response?.data && typeof err.response.data === 'object') {
@@ -53,7 +63,6 @@ const CreateJob: React.FC = () => {
       } else {
         setError(err.response?.data?.message || 'Failed to create job');
       }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -61,24 +70,26 @@ const CreateJob: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={() => navigate('/client-dashboard')}
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft size={20} />
-          <span>Back to Dashboard</span>
-        </button>
+        {!success ? (
+          <>
+            <button
+              onClick={() => navigate('/client-dashboard')}
+              className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-6"
+            >
+              <ArrowLeft size={20} />
+              <span>Back to Dashboard</span>
+            </button>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Post a New Job</h1>
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-6">Post a New Job</h1>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+                  {error}
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,7 +203,22 @@ const CreateJob: React.FC = () => {
               {isLoading ? 'Creating Job...' : 'Post Job'}
             </button>
           </form>
-        </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="bg-white rounded-lg shadow-lg p-12 max-w-md w-full text-center">
+              <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Job Posted Successfully!</h2>
+              <p className="text-gray-600 mb-6">
+                Your job has been posted successfully. Freelancers will be bidding on it shortly.
+              </p>
+              <p className="text-sm text-gray-500">
+                Redirecting to dashboard in a few seconds...
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

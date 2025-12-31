@@ -196,8 +196,6 @@ const ClientDashboard: React.FC = () => {
                       job={job}
                       showActions={true}
                       onEdit={handleEditJob}
-                      onDelete={handleDeleteJob}
-                      onAssign={handleAssignFreelancer}
                     />
                   ))}
                 </div>
