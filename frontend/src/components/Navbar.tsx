@@ -1,17 +1,19 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Menu, X, MessageCircle, Bell } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { LogOut, Menu, X, MessageCircle, Bell, User } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { chatAPI } from '../api/endpoints';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [unreadChats, setUnreadChats] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [loading, setLoading] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch unread counts
   const fetchUnreadCounts = async () => {
@@ -40,16 +42,28 @@ const Navbar: React.FC = () => {
     fetchUnreadCounts();
   }, [isAuthenticated]);
 
-  // Set up polling to refresh counts every 5 seconds
+  // Set up polling to refresh counts every 2 seconds for real-time updates
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const interval = setInterval(() => {
       fetchUnreadCounts();
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -58,11 +72,11 @@ const Navbar: React.FC = () => {
 
   const dashboardLink = user?.role === 'client' ? '/client-dashboard' : '/freelancer-dashboard';
 
-  // Badge component
+  // Badge component - improved styling
   const Badge: React.FC<{ count: number }> = ({ count }) => {
     if (count === 0) return null;
     return (
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
         {count > 99 ? '99+' : count}
       </span>
     );
@@ -138,17 +152,41 @@ const Navbar: React.FC = () => {
                   </Link>
                   <Badge count={unreadNotifications} />
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-gray-700">
-                    {user?.name} ({user?.role})
-                  </span>
+                {/* User Dropdown */}
+                <div className="relative" ref={userDropdownRef}>
                   <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="flex items-center justify-center w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition"
+                    aria-label="User menu"
                   >
-                    <LogOut size={18} />
-                    <span>Logout</span>
+                    <User size={20} />
                   </button>
+                  
+                  {isUserDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="font-semibold text-gray-800">{user?.name}</p>
+                        <p className="text-sm text-gray-600 capitalize">{user?.role}</p>
+                      </div>
+                      <Link
+                        to={user?.role === 'client' ? '/profile' : '/freelancer-profile'}
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        View Profile
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-200"
+                      >
+                        <LogOut size={16} />
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -255,10 +293,28 @@ const Navbar: React.FC = () => {
                     )}
                   </Link>
                 </div>
+                {/* Mobile User Menu */}
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="px-4 py-2 bg-gray-50 rounded-lg mb-2">
+                    <p className="font-semibold text-gray-800">{user?.name}</p>
+                    <p className="text-sm text-gray-600 capitalize">{user?.role}</p>
+                  </div>
+                  <Link
+                    to={user?.role === 'client' ? '/profile' : '/freelancer-profile'}
+                    className="block text-gray-700 hover:text-blue-600 font-medium py-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    View Profile
+                  </Link>
+                </div>
                 <button
-                  onClick={handleLogout}
-                  className="w-full text-left bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2"
                 >
+                  <LogOut size={18} />
                   Logout
                 </button>
               </>

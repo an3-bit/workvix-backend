@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { offerAPI } from '../api/endpoints';
-import { AlertCircle, Clock, CheckCircle2, XCircle, ArrowLeft, MessageCircle, Send, X } from 'lucide-react';
+import { offerAPI, orderAPI } from '../api/endpoints';
+import { AlertCircle, Clock, CheckCircle2, XCircle, ArrowLeft, MessageCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const statusBadge = (status: string) => {
@@ -22,8 +22,7 @@ const MyOffers: React.FC = () => {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showSubmitWorkModal, setShowSubmitWorkModal] = useState(false);
-  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
+  const [submittingOfferId, setSubmittingOfferId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +40,28 @@ const MyOffers: React.FC = () => {
     };
     load();
   }, []);
+
+  const handleSubmitWork = async (offerId: string) => {
+    try {
+      setSubmittingOfferId(offerId);
+      // Fetch all orders to find the one matching this offer
+      const ordersRes = await orderAPI.listOrders();
+      const orders = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.results ?? []);
+      
+      // Find order with matching offer ID
+      const order = orders.find((o: any) => o.offer?.id === offerId || o.offer === offerId);
+      
+      if (order) {
+        navigate(`/submit-work/${order.id || order._id}`);
+      } else {
+        setError('Could not find associated order for this offer');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to process submit work');
+    } finally {
+      setSubmittingOfferId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -98,13 +119,11 @@ const MyOffers: React.FC = () => {
                 <div className="col-span-2 flex justify-end gap-2">
                   {offer.status === 'accepted' && (
                     <button
-                      onClick={() => {
-                        setSelectedOfferId(offer.id);
-                        setShowSubmitWorkModal(true);
-                      }}
-                      className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-sm transition"
+                      onClick={() => handleSubmitWork(offer.id)}
+                      disabled={submittingOfferId === offer.id}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg transition inline-flex items-center justify-center gap-2"
                     >
-                      <Send size={16} /> Submit Work
+                      <Send size={16} /> {submittingOfferId === offer.id ? 'Loading...' : 'Submit Work'}
                     </button>
                   )}
                   {offer.chat && (
@@ -118,52 +137,6 @@ const MyOffers: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {showSubmitWorkModal && selectedOfferId && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Submit Work</h3>
-                <button
-                  onClick={() => {
-                    setShowSubmitWorkModal(false);
-                    setSelectedOfferId(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Go to the work submission page to upload your deliverables for this offer.
-              </p>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => {
-                    setShowSubmitWorkModal(false);
-                    setSelectedOfferId(null);
-                  }}
-                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    const offer = offers.find(o => o.id === selectedOfferId);
-                    if (selectedOfferId) {
-                      navigate(`/submit-work/${selectedOfferId}`);
-                      setShowSubmitWorkModal(false);
-                      setSelectedOfferId(null);
-                    }
-                  }}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Go to Submit Work
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>

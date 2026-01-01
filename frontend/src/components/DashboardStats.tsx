@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Briefcase, Users, DollarSign, TrendingUp, FileText, CheckCircle } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -27,6 +27,7 @@ interface DashboardStatsProps {
     totalJobs?: number;
     activeJobs: number;
     totalEarnings?: number;
+    totalSpent?: number;
     completedJobs: number;
   };
   userRole: 'client' | 'freelancer';
@@ -35,7 +36,7 @@ interface DashboardStatsProps {
 const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, userRole }) => {
   if (userRole === 'client') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatCard
           title="Total Jobs Posted"
           value={stats.totalJobs || 0}
@@ -54,12 +55,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, userRole }) => {
           icon={<Users />}
           color="bg-purple-500"
         />
-        <StatCard
-          title="Total Spent"
-          value={`$${stats.totalEarnings || 0}`}
-          icon={<DollarSign />}
-          color="bg-orange-500"
-        />
       </div>
     );
   }
@@ -67,7 +62,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, userRole }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <StatCard
-        title="Active Jobs"
+        title="Active Orders"
         value={stats.activeJobs}
         icon={<Briefcase />}
         color="bg-blue-500"
@@ -75,19 +70,19 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, userRole }) => {
       <StatCard
         title="Completed Jobs"
         value={stats.completedJobs}
-        icon={<TrendingUp />}
+        icon={<CheckCircle />}
         color="bg-green-500"
       />
       <StatCard
         title="Total Earnings"
-        value={`$${stats.totalEarnings || 0}`}
+        value={`$${typeof stats.totalEarnings === 'number' ? stats.totalEarnings.toFixed(2) : '0.00'}`}
         icon={<DollarSign />}
         color="bg-purple-500"
       />
       <StatCard
-        title="Total Jobs Applied"
+        title="Offers Submitted"
         value={stats.totalJobs || 0}
-        icon={<Users />}
+        icon={<FileText />}
         color="bg-orange-500"
       />
     </div>

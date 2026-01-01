@@ -116,14 +116,17 @@ def request_revision(request, order_id):
     serializer = RequestRevisionSerializer(data=request.data)
     if serializer.is_valid():
         # Create revision record
+        notes = serializer.validated_data.get('revision_notes', 'Please make revisions')
         OrderRevision.objects.create(
             order=order,
-            client=request.user,
-            revision_notes=serializer.validated_data['revision_notes']
+            requested_by=request.user,
+            reason=notes,
+            instructions=notes
         )
         
         # Update order status
         order.status = 'revision_requested'
+        order.revision_count += 1
         order.save()
         
         return Response(

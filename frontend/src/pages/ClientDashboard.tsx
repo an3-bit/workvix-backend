@@ -114,9 +114,9 @@ const ClientDashboard: React.FC = () => {
 
   const stats = {
     totalJobs: jobs.length,
-    activeJobs: jobs.filter(j => j.status !== 'completed').length,
-    completedJobs: jobs.filter(j => j.status === 'completed').length,
-    totalEarnings: orders
+    activeJobs: jobs.filter(j => j.status === 'open' || j.status === 'in_progress').length,
+    completedJobs: orders.filter(o => o.status === 'completed').length,
+    totalSpent: orders
       .filter(o => o.status === 'completed')
       .reduce((sum, o) => sum + (o.amount || 0), 0),
   };

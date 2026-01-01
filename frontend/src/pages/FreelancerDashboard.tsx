@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobAPI, orderAPI, Job, Order } from '../api/endpoints';
+import { jobAPI, orderAPI, offerAPI, Job, Order } from '../api/endpoints';
 import DashboardStats from '../components/DashboardStats';
 import JobCard from '../components/JobCard';
 import OrderCard from '../components/OrderCard';
@@ -10,6 +10,7 @@ const FreelancerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [activeTab, setActiveTab] = useState<'jobs' | 'orders'>('jobs');
@@ -25,9 +26,10 @@ const FreelancerDashboard: React.FC = () => {
       setIsLoadingJobs(true);
       setIsLoadingOrders(true);
 
-      const [jobsRes, ordersRes] = await Promise.all([
+      const [jobsRes, ordersRes, offersRes] = await Promise.all([
         jobAPI.getAllJobs(),
         orderAPI.listOrders(),
+        offerAPI.listOffers(),
       ]);
 
       // Handle paginated responses
@@ -37,6 +39,9 @@ const FreelancerDashboard: React.FC = () => {
       const ordersData = Array.isArray(ordersRes.data)
         ? ordersRes.data
         : (ordersRes.data?.results ?? []);
+      const offersData = Array.isArray(offersRes.data)
+        ? offersRes.data
+        : (offersRes.data?.results ?? offersRes.data?.offers ?? []);
 
       const normalizeJob = (j: any) => ({
         ...j,
@@ -53,6 +58,7 @@ const FreelancerDashboard: React.FC = () => {
 
       setJobs(jobsData.map(normalizeJob));
       setOrders(ordersData.map(normalizeOrder));
+      setOffers(offersData);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch data');
       console.error(err);
@@ -76,12 +82,12 @@ const FreelancerDashboard: React.FC = () => {
   };
 
   const stats = {
-    totalJobs: jobs.length,
-    activeJobs: orders.filter(o => o.status === 'in-progress').length,
+    totalJobs: offers.length, // Total offers/bids submitted
+    activeJobs: orders.filter(o => o.status === 'active' || o.status === 'submitted').length,
     completedJobs: orders.filter(o => o.status === 'completed').length,
     totalEarnings: orders
       .filter(o => o.status === 'completed')
-      .reduce((sum, o) => sum + (o.amount || 0), 0),
+      .reduce((sum, o) => sum + (Number(o.amount) || 0), 0),
   };
 
   return (
@@ -91,7 +97,7 @@ const FreelancerDashboard: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Freelancer Dashboard</h1>
           <button
-            onClick={() => setActiveTab('jobs')}
+            onClick={() => navigate('/freelancer-jobs')}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition"
           >
             <Briefcase size={20} />

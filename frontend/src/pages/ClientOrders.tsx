@@ -48,10 +48,8 @@ const ClientOrders: React.FC = () => {
   }, []);
 
   const handleApprove = async (orderId: string) => {
-    const rating = Number(window.prompt('Rate the work (1-5)', '5')) || 5;
-    const feedback = window.prompt('Feedback (optional)', '') || '';
     try {
-      await orderAPI.approveOrder(orderId, { rating, feedback });
+      await orderAPI.approveOrder(orderId, { rating: 5, feedback: '' });
       // Reload orders
       const res = await orderAPI.listOrders();
       const data = Array.isArray(res.data) ? res.data : res.data?.results ?? [];
@@ -62,13 +60,13 @@ const ClientOrders: React.FC = () => {
   };
 
   const handleRequestRevision = async (orderId: string) => {
-    const notes = window.prompt('Revision notes (min 10 chars)', 'Please adjust...');
-    if (!notes) return;
     try {
-      await orderAPI.requestRevision(orderId, { revision_notes: notes });
-      const res = await orderAPI.listOrders();
-      const data = Array.isArray(res.data) ? res.data : res.data?.results ?? [];
-      setOrders(data);
+      await orderAPI.requestRevision(orderId, { revision_notes: 'Please adjust accordingly' });
+      // Find the order to get chat ID
+      const order = orders.find(o => (o.id || o._id) === orderId);
+      if (order?.chat) {
+        navigate(`/chat/${order.chat}`);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to request revision');
     }
@@ -172,14 +170,6 @@ const ClientOrders: React.FC = () => {
                 )}
 
                 <div className="flex gap-2 flex-wrap pt-4 border-t">
-                  {order.job?.id && (
-                    <button
-                      onClick={() => navigate(`/chat/${order.id}`)}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-medium transition"
-                    >
-                      <MessageCircle size={16} /> Chat
-                    </button>
-                  )}
                   {order.status === 'submitted' && order.submissions && order.submissions.length > 0 && (
                     <button
                       onClick={() => handleViewSubmission(order.submissions[0])}
@@ -202,7 +192,7 @@ const ClientOrders: React.FC = () => {
                         onClick={() => handleApprove(order.id || order._id)}
                         className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 text-sm font-medium transition"
                       >
-                        Approve & Rate
+                        Approve
                       </button>
                       <button
                         onClick={() => handleRequestRevision(order.id || order._id)}

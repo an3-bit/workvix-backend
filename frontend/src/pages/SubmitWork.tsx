@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { orderAPI } from '../api/endpoints';
-import { ArrowLeft, Upload, FileText, X } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, X, CheckCircle } from 'lucide-react';
 
 const SubmitWork: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ const SubmitWork: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [success, setSuccess] = useState(false);
 
   // Load order details
   useEffect(() => {
@@ -77,16 +78,19 @@ const SubmitWork: React.FC = () => {
 
       const res = await orderAPI.submitWork(orderId!, data as any);
       
-      // Navigate to order details or freelancer dashboard
-      navigate('/freelancer-dashboard', { 
-        state: { success: 'Work submitted successfully!' } 
-      });
+      // Show success message
+      setSuccess(true);
+      setIsLoading(false);
+      
+      // Redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        navigate('/freelancer-dashboard');
+      }, 3000);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 
                        err.response?.data?.message || 
                        'Failed to submit work';
       setError(errorMsg);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -96,6 +100,23 @@ const SubmitWork: React.FC = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4">
           <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
+        <div className="bg-white rounded-lg shadow-lg p-12 max-w-md w-full text-center">
+          <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You for Submitting Your Work!</h2>
+          <p className="text-gray-600 mb-6">
+            The client will review it shortly and get back to you.
+          </p>
+          <p className="text-sm text-gray-500">
+            Redirecting to your dashboard...
+          </p>
         </div>
       </div>
     );

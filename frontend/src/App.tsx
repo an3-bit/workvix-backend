@@ -23,6 +23,7 @@ import ChatThread from './pages/ChatThread';
 import JobOffers from './pages/JobOffers';
 import Chats from './pages/Chats';
 import MyOffers from './pages/MyOffers';
+import Profile from './pages/Profile';
 
 const App: React.FC = () => {
   return (
@@ -165,6 +166,22 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute requiredRole="client">
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/freelancer-profile"
+            element={
+              <ProtectedRoute requiredRole="freelancer">
+                <Profile />
               </ProtectedRoute>
             }
           />
