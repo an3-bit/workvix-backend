@@ -1,10 +1,14 @@
 """Gunicorn configuration file for production deployment"""
 import os
 
-# Server socket - Render provides PORT environment variable
-port = os.environ.get('PORT', '8000')
+# Server socket - Hardcoded to port 10000 for Render
+port = 10000
 bind = f"0.0.0.0:{port}"
 backlog = 2048
+
+print(f"\n{'='*50}")
+print(f"GUNICORN BINDING TO: 0.0.0.0:{port}")
+print(f"{'='*50}\n")
 
 # Worker processes
 workers = 4

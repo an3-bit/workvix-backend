@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# This script properly binds to PORT environment variable for Render
-# Similar pattern to the Express example: const port = process.env.PORT || 4000
+# This script binds to port 10000 for Render
 
-# Get PORT from environment variable (Render provides this)
-PORT=${PORT:-8000}
+# Hardcoded port
+PORT=10000
 
 echo "========================================"
 echo "Starting WorkVix Backend"
@@ -19,8 +18,7 @@ python manage.py migrate --noinput
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Start application bound to 0.0.0.0:$PORT
-# This is the CRITICAL part for Render
+# Start application bound to 0.0.0.0:10000
 gunicorn \
     workvix_project.wsgi:application \
     --bind 0.0.0.0:$PORT \

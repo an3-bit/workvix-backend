@@ -5,11 +5,11 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Start Gunicorn server with proper port binding for Render'
+    help = 'Start Gunicorn server on port 10000 for Render'
 
     def handle(self, *args, **options):
-        # Get PORT from environment variable (Render provides this)
-        port = os.environ.get('PORT', '8000')
+        # Hardcoded port for Render
+        port = 10000
         
         self.stdout.write(
             self.style.SUCCESS(f'Starting Gunicorn on 0.0.0.0:{port}')
