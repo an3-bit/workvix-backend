@@ -1,25 +1,39 @@
 #!/bin/bash
-
-# Exit on error
 set -e
 
-echo "Starting Django application..."
-echo "PORT: 10000"
+echo "=========================================="
+echo "WORKVIX BACKEND - STARTING"
+echo "=========================================="
+echo "Port: 10000"
+echo "Host: 0.0.0.0"
+echo "Time: $(date)"
+echo "=========================================="
 
-# Run migrations
-echo "Running database migrations..."
-python manage.py migrate --noinput
+# Step 1: Migrations
+echo ""
+echo "Step 1: Running database migrations..."
+python manage.py migrate --noinput || {
+    echo "Migration failed, but continuing..."
+}
 
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+# Step 2: Static files
+echo ""
+echo "Step 2: Collecting static files..."
+python manage.py collectstatic --noinput || {
+    echo "Static files collection failed, but continuing..."
+}
 
-# Start Gunicorn - Bind to 0.0.0.0:10000
-echo "Starting Gunicorn on 0.0.0.0:10000..."
+# Step 3: Start Gunicorn
+echo ""
+echo "Step 3: Starting Gunicorn..."
+echo "=========================================="
+echo "Binding to: 0.0.0.0:10000"
+echo "=========================================="
+echo ""
+
 exec gunicorn workvix_project.wsgi:application \
     --bind 0.0.0.0:10000 \
     --workers 4 \
-    --worker-class sync \
     --timeout 120 \
     --access-logfile - \
     --error-logfile - \

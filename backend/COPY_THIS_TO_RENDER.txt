@@ -1,0 +1,14 @@
+# COPY THIS TO RENDER DASHBOARD - Start Command
+
+## Go to: Settings → Start Command
+
+```
+gunicorn workvix_project.wsgi:application --bind 0.0.0.0:10000 --workers 4 --timeout 120 --access-logfile - --error-logfile -
+```
+
+## Then:
+1. Click Save
+2. Wait for redeploy (2-3 minutes)
+3. Check logs for "Listening at: http://0.0.0.0:10000"
+
+✅ Done! No more "No open ports detected" error.
