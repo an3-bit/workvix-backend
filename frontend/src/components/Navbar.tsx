@@ -12,7 +12,6 @@ const Navbar: React.FC = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [unreadChats, setUnreadChats] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [loading, setLoading] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch unread counts
@@ -20,7 +19,6 @@ const Navbar: React.FC = () => {
     if (!isAuthenticated) return;
     
     try {
-      setLoading(true);
       // Fetch unread message count
       const chatRes = await chatAPI.unreadCount();
       setUnreadChats(chatRes.data?.unread_count || 0);
@@ -28,12 +26,10 @@ const Navbar: React.FC = () => {
       // Fetch all chats to count unread notifications
       const chatsRes = await chatAPI.listChats();
       const chatsData = Array.isArray(chatsRes.data) ? chatsRes.data : chatsRes.data?.results ?? [];
-      const totalUnread = chatsData.reduce((sum, chat: any) => sum + (chat.unread_count || 0), 0);
+      const totalUnread = chatsData.reduce((sum: number, chat: any) => sum + (chat.unread_count || 0), 0);
       setUnreadNotifications(totalUnread);
     } catch (err) {
       console.error('Failed to fetch unread counts:', err);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -62,29 +62,17 @@ const ClientDashboard: React.FC = () => {
     }
   };
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!window.confirm('Are you sure you want to delete this job?')) return;
-
-    try {
-      await jobAPI.deleteJob(jobId);
-      setJobs(jobs.filter(job => job._id !== jobId));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete job');
-    }
-  };
-
   const handleEditJob = (job: Job) => {
     navigate(`/edit-job/${job._id}`, { state: { job } });
   };
 
-  const handleAssignFreelancer = (jobId: string) => {
-    navigate(`/assign-freelancer/${jobId}`);
-  };
-
   const handleOrderAction = async (
     orderId: string,
-    action: 'approve' | 'revision'
+    action: 'approve' | 'revision' | 'submit'
   ) => {
+    // Only handle approve and revision for clients
+    if (action === 'submit') return;
+    
     try {
       if (action === 'approve') {
         const rating = Number(window.prompt('Rate the work (1-5)', '5')) || 5;
@@ -114,7 +102,7 @@ const ClientDashboard: React.FC = () => {
 
   const stats = {
     totalJobs: jobs.length,
-    activeJobs: jobs.filter(j => j.status === 'open' || j.status === 'in_progress').length,
+    activeJobs: jobs.filter(j => j.status === 'pending' || j.status === 'in-progress').length,
     completedJobs: orders.filter(o => o.status === 'completed').length,
     totalSpent: orders
       .filter(o => o.status === 'completed')

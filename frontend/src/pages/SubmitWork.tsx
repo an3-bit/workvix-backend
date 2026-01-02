@@ -76,7 +76,7 @@ const SubmitWork: React.FC = () => {
         data.append('attachment', attachment);
       }
 
-      const res = await orderAPI.submitWork(orderId!, data as any);
+      await orderAPI.submitWork(orderId!, data as any);
       
       // Show success message
       setSuccess(true);

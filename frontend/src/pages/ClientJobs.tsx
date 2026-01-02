@@ -34,22 +34,8 @@ const ClientJobs: React.FC = () => {
     loadJobs();
   }, []);
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!window.confirm('Are you sure you want to delete this job?')) return;
-    try {
-      await jobAPI.deleteJob(jobId);
-      setJobs(prev => prev.filter(j => j._id !== jobId));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete job');
-    }
-  };
-
   const handleEditJob = (job: Job) => {
     navigate(`/edit-job/${job._id}`, { state: { job } });
-  };
-
-  const handleAssignFreelancer = (jobId: string) => {
-    navigate(`/assign-freelancer/${jobId}`);
   };
 
   return (
@@ -97,8 +83,6 @@ const ClientJobs: React.FC = () => {
                 job={job}
                 showActions={true}
                 onEdit={handleEditJob}
-                onDelete={handleDeleteJob}
-                onAssign={handleAssignFreelancer}
                 showOffersButton
                 onViewOffers={(id) => navigate(`/jobs/${id}/offers`)}
               />

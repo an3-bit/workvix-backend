@@ -39,6 +39,8 @@ const CreateJob: React.FC = () => {
         budget_min: parseFloat(formData.budget_min),
         budget_max: parseFloat(formData.budget_max),
         deadline: new Date(formData.deadline).toISOString(),
+        clientId: '',
+        status: 'pending' as const,
       };
 
       console.log('Job payload:', payload);

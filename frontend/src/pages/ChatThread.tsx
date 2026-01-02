@@ -110,7 +110,7 @@ const ChatThread: React.FC = () => {
   const handleAcceptOffer = async (offerId: string) => {
     try {
       setAcceptingOfferId(offerId);
-      const response = await offerAPI.acceptOffer(offerId);
+      await offerAPI.acceptOffer(offerId);
       
       // Backend now automatically creates order, just redirect to orders page
       setTimeout(() => {

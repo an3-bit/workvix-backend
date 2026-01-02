@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { User, Mail, Briefcase, MapPin, Phone, Globe, Edit2, Save, X } from 'lucide-react';
 import api from '../api/client';
 
@@ -20,8 +18,6 @@ interface UserProfile {
 }
 
 const Profile: React.FC = () => {
-  const navigate = useNavigate();
-  const { user: authUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);

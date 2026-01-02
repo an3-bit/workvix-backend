@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const response = await login(formData.email, formData.password);
+      await login(formData.email, formData.password);
       
       // Get user data from localStorage (it's set by the login function)
       const userStr = localStorage.getItem('user');

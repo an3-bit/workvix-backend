@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Job } from '../api/endpoints';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Users } from 'lucide-react';
 
 interface JobCardProps {
   job: Job;
@@ -101,13 +101,13 @@ const JobCard: React.FC<JobCardProps> = ({
           {onEdit && (
             <button
               onClick={() => onEdit(job)}
-              disabled={job.status !== 'open' && job.status !== 'pending_registration'}
+              disabled={job.status === 'in-progress' || job.status === 'completed' || job.status === 'cancelled'}
               className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg transition ${
-                job.status !== 'open' && job.status !== 'pending_registration'
+                job.status === 'in-progress' || job.status === 'completed' || job.status === 'cancelled'
                   ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
                   : 'bg-blue-500 hover:bg-blue-600 text-white'
               }`}
-              title={job.status !== 'open' && job.status !== 'pending_registration' ? 'Cannot edit closed or in-progress jobs' : ''}
+              title={job.status === 'in-progress' || job.status === 'completed' || job.status === 'cancelled' ? 'Cannot edit closed or in-progress jobs' : ''}
             >
               <Edit2 size={16} />
               <span>Edit</span>

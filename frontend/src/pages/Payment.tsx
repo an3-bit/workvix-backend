@@ -120,7 +120,7 @@ const Payment: React.FC = () => {
         payment_type: 'order' as const,
       };
 
-      const res = await paymentAPI.createPayment(payload);
+      await paymentAPI.createPayment(payload);
       setSuccess('Payment initiated successfully! Redirecting to orders...');
       setTimeout(() => {
         navigate('/client-orders');

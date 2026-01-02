@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { orderAPI } from '../api/endpoints';
-import { CheckCircle2, Clock, AlertCircle, MessageCircle, CreditCard, X, FileText, Download } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, CreditCard, X, FileText, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const statusBadge = (status: string) => {

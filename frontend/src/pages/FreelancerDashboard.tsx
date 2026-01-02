@@ -74,8 +74,9 @@ const FreelancerDashboard: React.FC = () => {
 
   const handleOrderAction = async (
     orderId: string,
-    action: 'submit'
+    action: 'approve' | 'revision' | 'submit'
   ) => {
+    // Only handle submit for freelancers
     if (action === 'submit') {
       navigate(`/submit-work/${orderId}`);
     }
