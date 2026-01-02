@@ -3,9 +3,8 @@ services:
     name: workvix-backend
     runtime: python
     pythonVersion: 3.13.4
-    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn workvix_project.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --access-logfile - --error-logfile -
+    startCommand: bash start.sh
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.4
