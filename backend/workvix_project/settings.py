@@ -86,16 +86,23 @@ WSGI_APPLICATION = 'workvix_project.wsgi.application'
 AUTH_USER_MODEL = 'users.User'
 
 # Database
-# Use PostgreSQL from environment if available, otherwise SQLite
-if config('DB_HOST', default=None):
+# Use MongoDB for production via MongoEngine
+if config('MONGODB_URI', default=None):
+    import mongoengine as me
+    
+    MONGODB_URI = config('MONGODB_URI')
+    me.connect(
+        'workvix_db',
+        host=MONGODB_URI,
+        retryWrites=True,
+        w='majority'
+    )
+    
+    # Use MongoDB as default database
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT', default='5432'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:

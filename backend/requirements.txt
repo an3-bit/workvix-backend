@@ -5,7 +5,8 @@ django-filter==24.3
 Pillow==12.0.0
 python-decouple==3.8
 django-cors-headers==4.9.0
-psycopg2-binary==2.9.11
+mongoengine==0.27.0
+pymongo==4.6.0
 redis==5.1.1
 celery==5.4.0
 django-extensions==3.2.3

@@ -16,29 +16,5 @@ services:
         value: workvix-backend-rb7p.onrender.com
       - key: DJANGO_SETTINGS_MODULE
         value: workvix_project.settings
-      - key: DB_NAME
-        fromDatabase:
-          name: workvix-postgres
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: workvix-postgres
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: workvix-postgres
-          property: password
-      - key: DB_HOST
-        fromDatabase:
-          name: workvix-postgres
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: workvix-postgres
-          property: port
-
-databases:
-  - name: workvix-postgres
-    databaseName: workvix_db
-    user: workvix_user
-    plan: free
+      - key: MONGODB_URI
+        value: mongodb+srv://talaadundo:Bi01i82xRxRaklZV@workvix.kmtwbbe.mongodb.net/?retryWrites=true&w=majority&appName=workvix
