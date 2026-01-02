@@ -16,5 +16,4 @@ services:
         value: workvix-backend-rb7p.onrender.com
       - key: DJANGO_SETTINGS_MODULE
         value: workvix_project.settings
-      - key: MONGODB_URI
-        value: mongodb+srv://talaadundo:Bi01i82xRxRaklZV@workvix.kmtwbbe.mongodb.net/?retryWrites=true&w=majority&appName=workvix
+      -
