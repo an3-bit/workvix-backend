@@ -16,7 +16,10 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-64&bu!m985@!g%@(6&(_r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+# ALLOWED_HOSTS configuration
+_allowed_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+# Add Render domains dynamically
+ALLOWED_HOSTS = _allowed_hosts + ['*.onrender.com', 'onrender.com']
 
 # Application definition
 DJANGO_APPS = [
