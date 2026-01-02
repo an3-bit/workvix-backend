@@ -1,9 +1,9 @@
 """Gunicorn configuration file for production deployment"""
 import os
-from decouple import config
 
-# Server socket
-bind = f"0.0.0.0:{os.environ.get('PORT', config('PORT', default='8000'))}"
+# Server socket - Render provides PORT environment variable
+port = os.environ.get('PORT', '8000')
+bind = f"0.0.0.0:{port}"
 backlog = 2048
 
 # Worker processes
