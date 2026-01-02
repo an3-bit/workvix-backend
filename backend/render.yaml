@@ -3,7 +3,7 @@ services:
     name: workvix-backend
     runtime: python
     pythonVersion: 3.13.4
-    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements.txt && python manage.py makemigrations && python manage.py migrate --noinput && python manage.py collectstatic --noinput
     startCommand: gunicorn workvix_project.wsgi:application --bind 0.0.0.0:10000 --workers 4 --timeout 120 --access-logfile - --error-logfile - --log-level info
     envVars:
       - key: PYTHON_VERSION
@@ -16,3 +16,29 @@ services:
         value: workvix-backend-rb7p.onrender.com
       - key: DJANGO_SETTINGS_MODULE
         value: workvix_project.settings
+      - key: DB_NAME
+        fromDatabase:
+          name: workvix-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: workvix-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: workvix-postgres
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: workvix-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: workvix-postgres
+          property: port
+
+databases:
+  - name: workvix-postgres
+    databaseName: workvix_db
+    user: workvix_user
+    plan: free
