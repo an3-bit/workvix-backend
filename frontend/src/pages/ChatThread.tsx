@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { chatAPI, offerAPI } from '../api/endpoints';
+import { chatAPI, offerAPI, orderAPI } from '../api/endpoints';
 import { ArrowLeft, Send, FilePlus, Paperclip, X, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import InlineAlert from '../components/InlineAlert';
@@ -20,6 +20,7 @@ const ChatThread: React.FC = () => {
   const [showOffer, setShowOffer] = useState(false);
   const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null);
   const [offerCreatedSuccess, setOfferCreatedSuccess] = useState(false);
+  const [submittingOfferId, setSubmittingOfferId] = useState<string | null>(null);
   const [offerData, setOfferData] = useState({
     amount: '',
     delivery_time: 3,
@@ -134,6 +135,28 @@ const ChatThread: React.FC = () => {
     }
   };
 
+  const handleSubmitWork = async (offerId: string) => {
+    try {
+      setSubmittingOfferId(offerId);
+      // Fetch all orders to find the one matching this offer
+      const ordersRes = await orderAPI.listOrders();
+      const orders = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.results ?? []);
+      
+      // Find order with matching offer ID
+      const order = orders.find((o: any) => o.offer?.id === offerId || o.offer === offerId);
+      
+      if (order) {
+        navigate(`/submit-work/${order.id || order._id}`);
+      } else {
+        setError('Could not find associated order for this offer');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to process submit work');
+    } finally {
+      setSubmittingOfferId(null);
+    }
+  };
+
   const submitOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!jobId) {
@@ -210,12 +233,16 @@ const ChatThread: React.FC = () => {
                 </div>
                 <div className="flex gap-2">
                   {user?.role === 'freelancer' && offers.some((o: any) => o.freelancer?.id === (user as any)?.id && o.status === 'accepted') && (
-                    <Link
-                      to={`/submit-work/${offers.find((o: any) => o.freelancer?.id === (user as any)?.id && o.status === 'accepted')?.id}`}
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md"
+                    <button
+                      onClick={() => {
+                        const acceptedOffer = offers.find((o: any) => o.freelancer?.id === (user as any)?.id && o.status === 'accepted');
+                        if (acceptedOffer) handleSubmitWork(acceptedOffer.id);
+                      }}
+                      disabled={submittingOfferId !== null}
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-2 rounded-md"
                     >
-                      <Send size={18} /> Submit Work
-                    </Link>
+                      <Send size={18} /> {submittingOfferId ? 'Loading...' : 'Submit Work'}
+                    </button>
                   )}
                   {user?.role === 'freelancer' && !offers.some((o: any) => o.freelancer?.id === (user as any)?.id) && (
                     <button
